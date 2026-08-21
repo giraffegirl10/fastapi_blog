@@ -8,9 +8,11 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "aiosmtplib>=5.1.2",
     "aiosqlite>=0.22.1",
     "fastapi[standard]>=0.141.1",
     "greenlet>=3.5.5",
+    "pillow>=12.3.0",
     "pwdlib[argon2]>=0.3.1",
     "pydantic-settings>=2.14.2",
     "pyjwt>=2.13.0",
