@@ -44,9 +44,7 @@
     Load More Posts
   </button>
 </div>
-{% endif %} {% endblock content %} 
-
-{% block scripts %}
+{% endif %} {% endblock content %} {% block scripts %}
 <script type="module">
   import { escapeHtml, formatDate } from '/static/js/utils.js';
 
@@ -120,4 +118,4 @@
     loadMoreBtn.addEventListener('click', loadMorePosts);
   }
 </script>
-{% endblock scripts %}
+{% endblock scripts %} The quick brown fox jumps over the lazy dog.
