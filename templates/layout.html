@@ -33,7 +33,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <!-- Custom Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap"
           rel="stylesheet">
 
     <!-- Bootstrap CSS -->
@@ -48,7 +48,7 @@
           href="{{ url_for("static", path='css/main.css') }}">
 
     <!-- Set a theme color that matches your website's primary color -->
-    <meta name="theme-color" content="#527c9f">
+    <meta name="theme-color" content="#1a1a2e">
 
     <!-- Favicon for all browsers -->
     <link rel="icon"
@@ -70,11 +70,10 @@
     <!-- <meta http-equiv="Content-Security-Policy" content=" default-src 'self'; script-src 'self' code.jquery.com; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' images.examplecdn.com; "> -->
   </head>
   <body class="d-flex flex-column min-vh-100">
-    <header class="site-header">
-      <nav class="navbar navbar-expand-md bg-steel fixed-top"
-           data-bs-theme="dark">
-        <div class="container">
-          <a class="navbar-brand me-4" href="{{ url_for("home") }}">FastAPI Blog</a>
+    <header class="site-header container">
+      <nav class="navbar navbar-expand-md">
+        <div class="container-fluid px-0">
+          <a class="navbar-brand me-4" href="{{ url_for("home") }}" >FastAPI Blog<span class="brand-dot" aria-hidden="true">.</span></a>
           <button class="navbar-toggler"
                   type="button"
                   data-bs-toggle="collapse"
@@ -94,39 +93,49 @@
             <div class="navbar-nav">
             <!-- Shown when logged in (hidden by default, shown via JS) -->
             <div id="loggedInNav" class="d-none">
-                <button class="btn btn-outline-light mb-2 mb-md-0 me-md-2"
+                <button class="btn btn-accent"
                         type="button"
                         data-bs-toggle="modal"
-                        data-bs-target="#createPostModal">New Post</button>
-                <a class="btn btn-light mb-2 mb-md-0 me-md-3"
+                        data-bs-target="#createPostModal">Pin a post</button>
+                <a class="btn btn-night"
                   href="{{ url_for("account_page") }}"
                   id="accountBtn">Account</a>
             </div>
               <!-- Shown when logged out -->
               <div id="loggedOutNav">
-              <a class="btn btn-outline-light mb-2 mb-md-0 me-md-2"
-                  href="{{ url_for("login_page") }}">Login</a>
-              <a class="btn btn-light mb-2 mb-md-0 me-md-3"
+              <a class="nav-link"
+                  href="{{ url_for("login_page") }}">Log in</a>
+              <a class="btn btn-accent"
                   href="{{ url_for("register_page") }}">Register</a>
               </div>
-              <div class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle"
-                   href="#"
-                   role="button"
-                   id="bd-theme"
-                   data-bs-toggle="dropdown"
-                   aria-expanded="false">
-                  <span id="bd-theme-text">🌗 Auto</span>
-                </a>
+              <div class="dropdown ms-md-2">
+                <button class="theme-trigger dropdown-toggle"
+                        type="button"
+                        id="bd-theme"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        aria-label="Color theme (auto)">
+                  <span class="theme-icon" id="bd-theme-icon" aria-hidden="true"></span>
+                  <span id="bd-theme-text">Auto</span>
+                </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme">
                   <li>
-                    <button class="dropdown-item" type="button" data-bs-theme-value="light">🌝 Light</button>
+                    <button class="dropdown-item theme-option" type="button" data-bs-theme-value="light" aria-pressed="false">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                      Light
+                    </button>
                   </li>
                   <li>
-                    <button class="dropdown-item" type="button" data-bs-theme-value="dark">🌚 Dark</button>
+                    <button class="dropdown-item theme-option" type="button" data-bs-theme-value="dark" aria-pressed="false">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+                      Dark
+                    </button>
                   </li>
                   <li>
-                    <button class="dropdown-item" type="button" data-bs-theme-value="auto">🌗 Auto</button>
+                    <button class="dropdown-item theme-option" type="button" data-bs-theme-value="auto" aria-pressed="false">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+                      Auto
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -142,25 +151,24 @@
           {% endblock content %}
         </div>
         <aside class="col-md-4">
-          <div class="content-section py-3 px-4 mb-4">
-            <h3>Our Sidebar</h3>
-            <p class="text-body-secondary">You can put any information here you'd like.</p>
-            <ul class="list-group">
-              <li class="list-group-item">Latest Posts</li>
-              <li class="list-group-item">Announcements</li>
-              <li class="list-group-item">Calendars</li>
-              <li class="list-group-item">etc</li>
+          <div class="sidebar-note mb-4">
+            <h3>Around the blog</h3>
+            <p class="mb-0">You can put any information here you'd like.</p>
+            <ul>
+              <li>Latest Posts</li>
+              <li>Announcements</li>
+              <li>Calendars</li>
+              <li>etc</li>
             </ul>
           </div>
         </aside>
       </div>
     </main>
 
-    <footer class="mt-auto py-3 bg-body-tertiary border-top">
-      <div class="container text-center">
-        <p class="text-body-secondary mb-0">
-          © <span id="year"></span> FastAPI Blog. All rights reserved.
-        </p>
+    <footer class="mt-auto container">
+      <div class="site-footer">
+        <p class="mb-0">© <span id="year"></span> FastAPI Blog</p>
+        <a href="#">Back to top <span aria-hidden="true">↑</span></a>
       </div>
     </footer>
 
@@ -271,10 +279,24 @@
         }
         localStorage.setItem('theme', theme);
         
-        // Update button text
-        const themeText = { light: '🌝 Light', dark: '🌚 Dark', auto: '🌗 Auto' };
-        document.getElementById('bd-theme-text').textContent = themeText[theme];
+        // Mark the chosen option and show its icon and name on the trigger
+        document.querySelectorAll('[data-bs-theme-value]').forEach(button => {
+          const selected = button.getAttribute('data-bs-theme-value') === theme;
+          button.classList.toggle('active', selected);
+          button.setAttribute('aria-pressed', selected);
+          if (selected) {
+            const label = button.textContent.trim();
+            document.getElementById('bd-theme-icon').replaceChildren(button.querySelector('svg').cloneNode(true));
+            document.getElementById('bd-theme-text').textContent = label;
+            document.getElementById('bd-theme').setAttribute('aria-label', `Color theme (${label.toLowerCase()})`);
+          }
+        });
       };
+
+      // Keep Auto in sync when the system theme changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if ((localStorage.getItem('theme') || 'auto') === 'auto') setTheme('auto');
+      });
 
       // Set theme on click
       document.querySelectorAll('[data-bs-theme-value]').forEach(button => {

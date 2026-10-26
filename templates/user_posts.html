@@ -1,5 +1,7 @@
 {% extends "layout.html" %} {% block content %}
-<h1 class="mb-4">Posts by {{ user.username }}</h1>
+<div class="page-heading">
+  <h1>Posts by {{ user.username }}</h1>
+</div>
 <div id="postsContainer">
   {% for post in posts %}
   <article class="content-section py-3 px-4 mb-4">

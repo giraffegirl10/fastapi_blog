@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
+    <div class="page-heading">
+        <h1>The pinboard</h1>
+        <p>Quick thoughts on FastAPI, Python, and the dogs who help.</p>
+    </div>
     <div id="postsContainer">
         {% for post in posts %}
             <article class="content-section py-3 px-4 mb-4">
