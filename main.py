@@ -1,5 +1,6 @@
 import hashlib
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
@@ -36,6 +37,18 @@ app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
+
+
+def static_version(path: str) -> str:
+    """Short hash of a static file's contents, added to its URL as ?v=...
+
+    nginx tells browsers to cache /static for 30 days without checking back,
+    so the URL has to change whenever the file does.
+    """
+    return hashlib.md5((Path("static") / path).read_bytes()).hexdigest()[:8]
+
+
+templates.env.globals["static_version"] = static_version
 
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(posts.router, prefix="/api/posts", tags=["posts"])
