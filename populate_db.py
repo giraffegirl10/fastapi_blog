@@ -1,15 +1,20 @@
 """Fill the database with randomly generated sample users, posts and likes.
 
 Run with:  uv run python populate_db.py [--seed N] [--users N] [--posts N]
+Remove it: uv run python populate_db.py --clear
 
 Each run removes the previous sample data first. Sample users are the ones
 with an @example.com email; any other account (and its posts) is left alone.
 Pass --seed to get the same "random" data every time.
+
+Every sample user gets the same password: SAMPLE_PASSWORD from .env if set,
+otherwise a random one generated for this run. It's printed at the end.
 """
 
 import argparse
 import asyncio
 import random
+import secrets
 import sys
 from datetime import UTC, datetime, timedelta
 
@@ -23,8 +28,6 @@ from image_utils import _get_s3_client
 from main import app
 
 SAMPLE_EMAIL_DOMAIN = "example.com"
-# Every sample account shares this password so you can log in as any of them.
-SAMPLE_PASSWORD = "SamplePassword1!"
 
 USERNAME_ADJECTIVES = [
     "Quiet", "Pixel", "Lucky", "Cosmic", "Sunny", "Rusty", "Clever", "Midnight",
@@ -232,6 +235,13 @@ async def clear_sample_data() -> None:
     print("Cleared previous sample data")
 
 
+async def clear() -> None:
+    await clear_sample_data()
+    # Likes on other users' posts were removed too
+    await recount_likes()
+    await engine.dispose()
+
+
 async def recount_likes() -> None:
     """Make every post's cached like count match its post_likes rows."""
     async with AsyncSessionLocal() as db:
@@ -265,6 +275,12 @@ async def spread_post_dates(rng: random.Random, post_ids: list[int]) -> None:
 
 async def populate(seed: int | None, user_count: int, post_count: int) -> None:
     rng = random.Random(seed)
+    # Never derived from --seed, so it can't be guessed from the repo
+    password = (
+        settings.sample_password.get_secret_value()
+        if settings.sample_password
+        else secrets.token_urlsafe(12)
+    )
     transport = httpx.ASGITransport(app=app)
 
     async with httpx.AsyncClient(transport=transport, base_url="http://localhost") as client:
@@ -278,13 +294,13 @@ async def populate(seed: int | None, user_count: int, post_count: int) -> None:
             email = f"{username.lower()}@{SAMPLE_EMAIL_DOMAIN}"
             response = await client.post(
                 "/api/users",
-                json={"username": username, "email": email, "password": SAMPLE_PASSWORD},
+                json={"username": username, "email": email, "password": password},
             )
             response.raise_for_status()
 
             response = await client.post(
                 "/api/users/token",
-                data={"username": email, "password": SAMPLE_PASSWORD},
+                data={"username": email, "password": password},
             )
             response.raise_for_status()
             token = response.json()["access_token"]
@@ -324,7 +340,7 @@ async def populate(seed: int | None, user_count: int, post_count: int) -> None:
     await engine.dispose()
 
     print("\nDone!")
-    print(f"  {user_count} users (password for all: see SAMPLE_PASSWORD in this file)")
+    print(f"  {user_count} users, all with the password: {password}")
     print(f"  {post_count} posts")
     print(f"  {like_total} likes")
 
@@ -334,6 +350,9 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, help="repeatable random data")
     parser.add_argument("--users", type=int, default=6)
     parser.add_argument("--posts", type=int, default=40)
+    parser.add_argument(
+        "--clear", action="store_true", help="only remove the sample data",
+    )
     args = parser.parse_args()
 
     max_posts = sum(len(t["titles"]) * len(t["words"]) for t in TOPICS.values())
@@ -347,4 +366,7 @@ if __name__ == "__main__":
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-    asyncio.run(populate(args.seed, args.users, args.posts))
+    if args.clear:
+        asyncio.run(clear())
+    else:
+        asyncio.run(populate(args.seed, args.users, args.posts))

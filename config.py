@@ -35,4 +35,8 @@ class Settings(BaseSettings):
 
     frontend_url: str = "http://localhost:8000"
 
+    # Shared password for populate_db.py's sample users; a random one is
+    # generated each run when unset
+    sample_password: SecretStr | None = None
+
 settings = Settings()  # type: ignore[call-arg] # Loaded from .env file
