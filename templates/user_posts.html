@@ -1,4 +1,4 @@
-{% extends "layout.html" %} {% block content %}
+{% extends "layout.html" %} {% from "macros.html" import like_button %} {% block content %}
 <div class="page-heading">
   <h1>Posts by {{ user.username }}</h1>
 </div>
@@ -33,6 +33,7 @@
           >
         </h2>
         <p class="article-content">{{ post.content }}</p>
+        <div class="post-footer">{{ like_button(post) }}</div>
       </div>
     </div>
   </article>
@@ -49,6 +50,7 @@
 {% endif %} {% endblock content %} {% block scripts %}
 <script type="module">
   import { escapeHtml, formatDate } from '/static/js/utils.js';
+  import { likeButtonHTML, syncLikedState } from '/static/js/likes.js';
 
   const userId = {{ user.id }};
   let currentOffset = {{ limit }};
@@ -72,6 +74,7 @@
               <a class="article-title" href="/posts/${post.id}">${escapeHtml(post.title)}</a>
             </h2>
             <p class="article-content">${escapeHtml(post.content)}</p>
+            <div class="post-footer">${likeButtonHTML(post.id, post.likes)}</div>
           </div>
         </div>
       </article>
@@ -93,9 +96,11 @@
 
       const data = await response.json();
 
+      const firstNew = postsContainer.children.length;
       for (const post of data.posts) {
         postsContainer.insertAdjacentHTML('beforeend', createPostHTML(post));
       }
+      syncLikedState([...postsContainer.children].slice(firstNew));
 
       currentOffset += data.posts.length;
       hasMore = data.has_more;

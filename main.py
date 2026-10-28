@@ -1,7 +1,8 @@
+import hashlib
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.exception_handlers import (
     http_exception_handler,
     request_validation_exception_handler,
@@ -13,11 +14,13 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 import models
 from config import settings
 from database import engine, get_db
+from image_utils import initials_avatar
 from routers import posts, users
 
 
@@ -47,6 +50,20 @@ async def health_check(db: Annotated[AsyncSession, Depends(get_db)]):
             detail="Database unavailable",
         ) from exc
     return {"status": "healthy"}
+
+
+@app.get("/avatars/{username}.png", include_in_schema=False, name="avatar")
+async def avatar(request: Request, username: str):
+    """Default profile picture: the username's initials."""
+    if len(username) > 50:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    png = await run_in_threadpool(initials_avatar, username)
+    # Browsers revalidate each time and get a 304 unless the design changed
+    etag = f'"{hashlib.md5(png).hexdigest()}"'
+    headers = {"Cache-Control": "no-cache", "ETag": etag}
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
+    return Response(png, media_type="image/png", headers=headers)
 
 
 @app.get("/", include_in_schema=False, name="home")

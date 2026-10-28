@@ -55,7 +55,14 @@ class PostResponse(PostBase):
     id: int
     user_id: int
     date_posted: datetime
+    likes: int
     author: UserPublic
+
+
+class PostLikeResponse(BaseModel):
+    post_id: int
+    likes: int
+    liked: bool
 
 
 class PaginatedPostsResponse(BaseModel):

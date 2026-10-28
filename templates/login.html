@@ -56,14 +56,7 @@
           // Store token in localStorage
           localStorage.setItem('access_token', data.access_token);
 
-          // Show success modal and redirect to home
-          document.getElementById('successMessage').textContent =
-            'Login successful!';
-          showModal('successModal');
-
-          document.getElementById('successModal').addEventListener('hidden.bs.modal', () => {
-            window.location.href = '/';
-          }, { once: true });
+          window.location.href = '/';
         } else {
           const error = await response.json();
           document.getElementById('errorMessage').textContent = getErrorMessage(error);

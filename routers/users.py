@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from PIL import UnidentifiedImageError
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette.concurrency import run_in_threadpool
@@ -378,6 +378,19 @@ async def delete_user(
         )
 
     old_filename = user.image_file
+
+    # The user's likes are deleted with them, so take them off the cached counts.
+    await db.execute(
+        update(models.Post)
+        .where(
+            models.Post.id.in_(
+                select(models.PostLike.post_id).where(
+                    models.PostLike.user_id == user_id,
+                ),
+            ),
+        )
+        .values(likes=models.Post.likes - 1),
+    )
 
     await db.delete(user)
     await db.commit()

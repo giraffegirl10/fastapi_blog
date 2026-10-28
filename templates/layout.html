@@ -11,7 +11,7 @@
       <title>FastAPI Blog</title>
     {% endif %}
     <meta name="description" content="FastAPI Tutorial">
-    <meta name="author" content="Corey Schafer">
+    <meta name="author" content="Heather Schoonmaker">
 
     <!-- Open Graph Tags: The title of the page for social media sharing. It can match the title tag or be more descriptive. -->
     <meta property="og:title" content="FastAPI Blog">
@@ -153,13 +153,10 @@
         <aside class="col-md-4">
           <div class="sidebar-note mb-4">
             <h3>Around the blog</h3>
-            <p class="mb-0">You can put any information here you'd like.</p>
-            <ul>
-              <li>Latest Posts</li>
-              <li>Announcements</li>
-              <li>Calendars</li>
-              <li>etc</li>
-            </ul>
+            <h4 class="sidebar-heading" id="popularHeading">Most liked</h4>
+            <ol class="popular-list" id="popularPosts" aria-labelledby="popularHeading">
+              <li class="popular-empty">Loading…</li>
+            </ol>
           </div>
         </aside>
       </div>
@@ -413,6 +410,43 @@ if (!token) {
         showModal("errorModal");
     }
     });
+</script>
+
+<!-- Most Liked Sidebar List -->
+<script type="module">
+    import { escapeHtml } from "/static/js/utils.js";
+
+    const popularList = document.getElementById("popularPosts");
+
+    async function loadPopularPosts() {
+        try {
+            const response = await fetch("/api/posts/popular?limit=5");
+            if (!response.ok) throw new Error("Failed to fetch popular posts");
+            const posts = await response.json();
+
+            if (posts.length === 0) {
+                popularList.innerHTML =
+                    '<li class="popular-empty">No likes yet. Be the first to heart a post!</li>';
+                return;
+            }
+
+            popularList.innerHTML = posts.map((post) => `
+                <li>
+                    <a href="/posts/${post.id}">${escapeHtml(post.title)}</a>
+                    <span class="popular-meta">
+                        <svg class="popular-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-9.2-9.3C1.6 7.8 3.9 4.5 7.3 4.5c2 0 3.5 1.1 4.7 2.7 1.2-1.6 2.7-2.7 4.7-2.7 3.4 0 5.7 3.3 4.5 6.7-1.7 4.7-9.2 9.3-9.2 9.3z"/></svg>
+                        ${post.likes} ${post.likes === 1 ? "like" : "likes"} · ${escapeHtml(post.author.username)}
+                    </span>
+                </li>
+            `).join("");
+        } catch (error) {
+            console.error("Error loading popular posts:", error);
+            popularList.innerHTML =
+                '<li class="popular-empty">Couldn\'t load the most liked posts.</li>';
+        }
+    }
+
+    loadPopularPosts();
 </script>
 
 {% block scripts %}

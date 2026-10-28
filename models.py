@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from urllib.parse import quote
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -32,11 +33,17 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    post_likes: Mapped[list[PostLike]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
     @property
     def image_path(self) -> str:
         if self.image_file:
             return f"https://{settings.s3_bucket_name}.s3.{settings.s3_region}.amazonaws.com/profile_pics/{self.image_file}"
-        return "/static/profile_pics/default.jpg"
+        return f"/avatars/{quote(self.username, safe='')}.png"
 
 
 class Post(Base):
@@ -55,11 +62,40 @@ class Post(Base):
         default=lambda: datetime.now(UTC),
     )
 
-    ## Likes Field
+    ## Likes Field: a cached count of this post's PostLike rows
     likes: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
     author: Mapped[User] = relationship(back_populates="posts")
+
+    like_records: Mapped[list[PostLike]] = relationship(
+        back_populates="post",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+
+class PostLike(Base):
+    """One row per user per liked post; the composite key stops double likes."""
+
+    __tablename__ = "post_likes"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    post_id: Mapped[int] = mapped_column(
+        ForeignKey("posts.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+
+    user: Mapped[User] = relationship(back_populates="post_likes")
+    post: Mapped[Post] = relationship(back_populates="like_records")
 
 
 class PasswordResetToken(Base):

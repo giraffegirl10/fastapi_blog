@@ -416,6 +416,33 @@ button:focus-visible {
   transform: rotate(0deg) translateY(-3px);
 }
 
+/* The title link stretches over the whole note, so any click opens the post.
+   The author link sits above it and still goes to the author's page. */
+#postsContainer > article.content-section {
+  position: relative;
+}
+
+#postsContainer a.article-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+#postsContainer .article-metadata a {
+  position: relative;
+  z-index: 2;
+}
+
+#postsContainer a.article-title:focus-visible {
+  outline: none;
+}
+
+#postsContainer > article:has(a.article-title:focus-visible) {
+  outline: 3px solid var(--code-key);
+  outline-offset: 4px;
+}
+
 #postsContainer > article:nth-child(5n + 1) { --tint: var(--tint-1); --tilt: -1.5deg; }
 #postsContainer > article:nth-child(5n + 2) { --tint: var(--tint-2); --tilt: 1deg; }
 #postsContainer > article:nth-child(5n + 3) { --tint: var(--tint-3); --tilt: -0.5deg; }
@@ -444,6 +471,71 @@ button:focus-visible {
 #postsContainer > article .d-flex {
   flex-direction: column;
   gap: 1rem !important;
+}
+
+/* Like button: a small outlined pill. Notes are always pastel, so its
+   colors stay fixed in dark mode too. */
+.post-footer {
+  margin-top: 1rem;
+}
+
+.like-btn {
+  position: relative;
+  z-index: 2; /* above the note's stretched title link */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0 0.85rem;
+  background: #ffffff;
+  color: #1a1a2e;
+  border: 2px solid #1a1a2e;
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 #1a1a2e;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.like-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 #1a1a2e;
+}
+
+.like-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #1a1a2e;
+}
+
+.like-btn:disabled {
+  cursor: progress;
+}
+
+.like-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.like-btn[aria-pressed="true"] .like-icon {
+  fill: #e0457b;
+  stroke: #1a1a2e;
+  animation: like-pop 0.25s ease;
+}
+
+@keyframes like-pop {
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .like-btn[aria-pressed="true"] .like-icon {
+    animation: none;
+  }
 }
 
 /* A single post reads as one big pink note. */
@@ -482,18 +574,74 @@ button:focus-visible {
   margin-bottom: 0.5rem;
 }
 
-.sidebar-note ul {
-  margin: 1rem 0 0;
-  padding-left: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  color: #fff;
-  font-weight: 600;
+.sidebar-heading {
+  margin: 1rem 0 0.75rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.sidebar-note li::marker {
+/* Most liked: a numbered list with big pink rank numbers */
+.popular-list {
+  list-style: none;
+  counter-reset: popular;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.popular-list li {
+  counter-increment: popular;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  column-gap: 0.5rem;
+}
+
+.popular-list li::before {
+  content: counter(popular);
+  grid-row: span 2;
   color: var(--accent);
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.popular-list a {
+  color: #fff;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.popular-list a:hover {
+  color: var(--accent);
+}
+
+.popular-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.2rem;
+  font-size: 0.85rem;
+  color: var(--night-text);
+}
+
+.popular-heart {
+  width: 14px;
+  height: 14px;
+  fill: #e0457b;
+}
+
+.popular-list li.popular-empty {
+  display: block;
+  color: var(--night-text);
+}
+
+.popular-list li.popular-empty::before {
+  content: none;
 }
 
 @media (max-width: 767.98px) {
@@ -541,6 +689,16 @@ a.article-title:focus {
   flex-shrink: 0;
   object-fit: cover;
   border: 2px solid var(--edge);
+}
+
+/* Shows through transparent avatars (the sample users' initials) so they
+   match the page in both themes; photos simply cover it */
+.article-img,
+.account-img,
+#profileImage {
+  background-color: var(--page);
+  background-image: radial-gradient(var(--dots) 1.2px, transparent 1.2px);
+  background-size: 11px 11px;
 }
 
 .article-metadata {

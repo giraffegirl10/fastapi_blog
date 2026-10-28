@@ -1,8 +1,9 @@
 {% extends "layout.html" %}
+{% from "macros.html" import like_button %}
 {% block content %}
     <div class="page-heading">
         <h1>The pinboard</h1>
-        <p>Quick thoughts on FastAPI, Python, and the dogs who help.</p>
+        <p>Quick thoughts on code, cooking, the outdoors, and everything in between.</p>
     </div>
     <div id="postsContainer">
         {% for post in posts %}
@@ -25,6 +26,7 @@
                                href="{{ url_for("post_page", post_id=post.id) }}">{{ post.title }}</a>
                         </h2>
                         <p class="article-content">{{ post.content }}</p>
+                        <div class="post-footer">{{ like_button(post) }}</div>
                     </div>
                 </div>
             </article>
@@ -39,6 +41,7 @@
 {% block scripts %}
     <script type="module">
   import { escapeHtml, formatDate } from '/static/js/utils.js';
+  import { likeButtonHTML, syncLikedState } from '/static/js/likes.js';
 
   // Pagination state - initialized from server-rendered values
   let currentOffset = {{ limit }};  // Start after server-rendered posts
@@ -63,6 +66,7 @@
               <a class="article-title" href="/posts/${post.id}">${escapeHtml(post.title)}</a>
             </h2>
             <p class="article-content">${escapeHtml(post.content)}</p>
+            <div class="post-footer">${likeButtonHTML(post.id, post.likes)}</div>
           </div>
         </div>
       </article>
@@ -87,9 +91,13 @@
       const data = await response.json();
 
       // Append new posts to the container
+      const firstNew = postsContainer.children.length;
       for (const post of data.posts) {
         postsContainer.insertAdjacentHTML('beforeend', createPostHTML(post));
       }
+
+      // Show which of the new posts the user already liked
+      syncLikedState([...postsContainer.children].slice(firstNew));
 
       // Update pagination state
       currentOffset += data.posts.length;

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import AsyncClient
 
+from image_utils import username_initials
 from tests.conftest import auth_header, create_test_user, login_user
 
 @pytest.mark.anyio
@@ -55,6 +56,31 @@ async def test_create_user_success(client: AsyncClient):
     assert "image_path" in data
     assert "password" not in data
     assert "password_hash" not in data
+
+@pytest.mark.anyio
+async def test_default_profile_picture_is_initials(client: AsyncClient):
+    response = await client.post(
+        "/api/users",
+        json={
+            "username": "QuietFalcon",
+            "email": "quietfalcon@example.com",
+            "password": "securepassword123",
+        },
+    )
+
+    image_path = response.json()["image_path"]
+    assert image_path == "/avatars/QuietFalcon.png"
+
+    response = await client.get(image_path)
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/png"
+
+@pytest.mark.parametrize(
+    ("username", "initials"),
+    [("QuietFalcon42", "QF"), ("jane_doe", "JD"), ("heather", "H"), ("123", "1")],
+)
+def test_username_initials(username: str, initials: str):
+    assert username_initials(username) == initials
 
 @pytest.mark.anyio
 async def test_upload_profile_picture(client: AsyncClient, mocked_aws):
